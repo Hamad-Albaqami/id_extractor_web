@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Extractor Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .output {
+            margin-top: 20px;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ID Extractor Tool</h1>
+
+        <label for="file-upload">Choose CSV file:</label>
+        <input type="file" id="file-upload" accept=".csv" />
+
+        <label for="id-type">Select ID Type:</label>
+        <select id="id-type">
+            <option value="10 digits (start with 1 or 2)">10 digits (start with 1 or 2)</option>
+            <option value="8 digits (start with 14)">8 digits (start with 14)</option>
+        </select>
+
+        <button id="load-button">Load CSV</button>
+        
+        <div class="output">
+            <h2>Extracted IDs:</h2>
+            <pre id="ids-output">No IDs extracted yet.</pre>
+        </div>
+
+        <button id="download-button" style="display: none;">Download IDs as CSV</button>
+    </div>
+
+    <script>
+        // Utility function to get the correct regex pattern based on the selected ID type
+        function getRegexPattern(idType) {
+            if (idType === "10 digits (start with 1 or 2)") {
+                return /\b([12]\d{9})\b/g;
+            } else if (idType === "8 digits (start with 14)") {
+                return /\b(14\d{6})\b/g;
+            }
+            return null;
+        }
+
+        // Read CSV and extract matching IDs
+        function processCSV(file, idType) {
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const text = event.target.result;
+                const rows = text.split("\n");
+                const ids = [];
+                const pattern = getRegexPattern(idType);
+
+                // Process each cell in the CSV
+                rows.forEach(row => {
+                    const cells = row.split(",");
+                    cells.forEach(cell => {
+                        const matches = cell.match(pattern);
+                        if (matches) {
+                            ids.push(...matches);
+                        }
+                    });
+                });
+
+                displayExtractedIDs(ids);
+            };
+
+            reader.onerror = function() {
+                alert("Error reading the file.");
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Display the extracted IDs on the page
+        function displayExtractedIDs(ids) {
+            const output = document.getElementById("ids-output");
+            const downloadButton = document.getElementById("download-button");
+
+            if (ids.length > 0) {
+                output.textContent = ids.join("\n");
+                downloadButton.style.display = "inline-block"; // Show the download button
+                downloadButton.onclick = function() {
+                    downloadCSV(ids);
+                };
+            } else {
+                output.textContent = "No matching IDs found.";
+                downloadButton.style.display = "none"; // Hide the download button
+            }
+        }
+
+        // Download the extracted IDs as a CSV file
+        function downloadCSV(ids) {
+            let csvContent = "ID\n" + ids.join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "extracted_ids.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Handle the "Load CSV" button click
+        document.getElementById("load-button").onclick = function() {
+            const fileInput = document.getElementById("file-upload");
+            const idTypeSelect = document.getElementById("id-type");
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const idType = idTypeSelect.value;
+                processCSV(file, idType);
+            } else {
+                alert("Please select a CSV file first.");
+            }
+        };
+    </script>
+</body>
+</html>
