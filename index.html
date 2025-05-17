@@ -128,6 +128,7 @@
     <select id="id-type">
       <option value="10 digits (start with 1 or 2)">10 digits (start with 1 or 2)</option>
       <option value="8 digits (start with 14)">8 digits (start with 14)</option>
+      <option value="14 digits (start with 300)">14 digits (start with 300)</option>
     </select>
 
     <div class="btn-group" id="toggle-buttons" style="display:none;">
@@ -152,6 +153,8 @@
         return /\b([12]\d{9})\b/g;
       } else if (idType === "8 digits (start with 14)") {
         return /\b(14\d{6})\b/g;
+      }else if (idType === "14 digits (start with 300)") {
+        return /\b(3000\d{10})\b/g;
       }
       return null;
     }
